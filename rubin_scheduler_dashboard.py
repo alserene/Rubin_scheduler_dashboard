@@ -136,7 +136,8 @@ class Scheduler(param.Parameterized):
                                                            #'font-family': 'Helvetica'
                                                             })
         return dashboard_title
-    
+
+
     # Panel for survey rewards table title.
     @param.depends("tier")
     def survey_rewards_title(self):
@@ -146,7 +147,8 @@ class Scheduler(param.Parameterized):
         survey_rewards_title = pn.pane.Str(title_string, styles={'font-size':'14pt',
                                                                  'color':'white'})
         return survey_rewards_title
-    
+
+
     # Panel for basis function table title.
     @param.depends("survey")
     def basis_function_table_title(self):        
