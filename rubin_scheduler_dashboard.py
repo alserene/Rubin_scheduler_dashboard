@@ -32,19 +32,16 @@ Notes
 
 - Current issues:
     
-    - I haven't found a way to display the map.
-        - I think we need a custom panel?
+    - I haven't found a way to display the map. I think we might need a custom panel.
     - Survey rewards table includes hyperlinks for surveys without links.
         - I haven't found a way to fix this with tabulator_formatter options.
     - The Rubin logo isn't right-justified.
     - I haven't found a way to change the title/headings fonts.
         - The styles 'font-family': 'Helvetica' option doesn't do anything.
-    - The error log is very unsightly.
-        - Is there any way to display this better?
+    - The error log is very unsightly. Is there any way to display this better?
     - The clear_caches function copied from prenight.py doesn't work.
         - sched_app has no attribute stop(). What should go here isntead?
-    - The two main columns are given equal width on the page.
-        - How to customise this?
+    - The two main columns are given equal width on the page. How to customise this?
     - Basis function table (and a fair few other functions) updates when it shouldn't.
         - listed_survey is not None?
     - When choosing a new survey, the plot title flashes 'Map reward' breifly before clearing.
@@ -84,7 +81,7 @@ pn.extension("tabulator",
 
 #pn.widgets.Tabulator.theme = 'site'
 
-pn.config.console_output = "disable" # To avoid clutter.
+pn.config.console_output = "disable"                                           # To avoid clutter.
 
 logging.basicConfig(format = "%(asctime)s %(message)s",
                     level  = logging.INFO)
@@ -176,7 +173,6 @@ class Scheduler(param.Parameterized):
             title_string = titleA + titleB
         else:
             title_string = ''
-        
         map_title = pn.pane.Str(title_string, styles={'font-size':'14pt',
                                                       'color':'white'})
         return map_title
@@ -323,11 +319,13 @@ class Scheduler(param.Parameterized):
             self.survey_map = maps[-1]                                         # Reward map usually (always?) listed last.
         else:
             self.survey_map = maps[0]
-    
-    # Update parameter which determines whether a basis function or a map is plotted.
+
+
+    # Update the parameter which determines whether a basis function or a map is plotted.
     @param.depends("survey_map", watch=True)
     def _update_plot_display(self):
         self.plot_display = 1                                                  # Display map instead of basis function.
+
 
     # Update basis function table if new survey chosen.
     @param.depends("_listed_survey", "survey_reward_table", watch=True)
@@ -346,6 +344,7 @@ class Scheduler(param.Parameterized):
         except Exception as e:
             logging.error(e)
             self._basis_functions = None
+
 
     # Widget for basis function table.
     @param.depends("_basis_functions")
@@ -477,10 +476,10 @@ if __name__ == "__main__":
 
     pn.serve(
         scheduler_app,
-        port=scheduler_port,
-        title="Scheduler Dashboard",
-        show=True,
-        start=True,
-        autoreload=True,
-        threaded=True,
+        port       = scheduler_port,
+        title      = "Scheduler Dashboard",
+        show       = True,
+        start      = True,
+        autoreload = True,
+        threaded   = True,
     )
