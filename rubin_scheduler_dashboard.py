@@ -21,13 +21,14 @@ Notes
 
 - Still to implement:
     
-    - Survey/basis function holoviz map.
-    - Link basis_function selection and map selection to plot display.
-    - Link nside drop down selection to map nside.
-    - Link color palette drop down selection to map color palette.
-    - Beautification of elements (fonts, etc.).
-    - Restricting the number of rows displayed for the survey rewards table.
-    - Set relative widths of two main columns (perhaps 3/5,2/5?).
+    1. Survey/basis function holoviz map.
+    2. Link basis_function selection and map selection to plot display.
+    3. Link nside drop down selection to map nside.
+    4. Link color palette drop down selection to map color palette.
+    5. Beautification of elements (fonts, etc.).
+    6. Restricting the number of rows displayed for the survey rewards table.
+    7. Set relative widths of two main columns (perhaps 3/5,2/5?).
+    8. Add padding between dashboard components.
     - ...
 
 - Current issues:
@@ -71,9 +72,9 @@ DEFAULT_SCHEDULER_FNAME = "scheduler.pickle.xz"
 
 color_palettes = [s for s in bokeh.palettes.__palettes__ if "256" in s]
 
-LOGO      = "/Users/me/Documents/2023/ADACS/Panel_scheduler/lsst_white_logo.png"
-key_image = "/Users/me/Documents/2023/ADACS/Panel_scheduler/key_image.png"
-map_image = "/Users/me/Documents/2023/ADACS/Panel_scheduler/map_image.png"     # Temporary, until map can be displayed.
+LOGO      = "/Users/me/Documents/2023/ADACS/Panel_scheduler/Rubin_scheduler_dashboard/lsst_white_logo.png"
+key_image = "/Users/me/Documents/2023/ADACS/Panel_scheduler/Rubin_scheduler_dashboard/key_image.png"
+map_image = "/Users/me/Documents/2023/ADACS/Panel_scheduler/Rubin_scheduler_dashboard/map_image.png" # Temporary, until map can be displayed.
 
 pn.extension("tabulator",
              css_files   = [pn.io.resources.CSS_URLS["font-awesome"]],
