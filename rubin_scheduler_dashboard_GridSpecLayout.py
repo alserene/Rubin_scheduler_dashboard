@@ -63,7 +63,7 @@ Current issues
     
     Layout options:
         - Row/column: all rows/columns are equally divided.
-        - GridSpec:   custom spacing but tables/map overrun their space.
+        - GridSpec:   custom spacing but tables overrun their space.
 
 
 Pending questions
@@ -550,7 +550,7 @@ def scheduler_app(date=None, scheduler_pickle=None):
     # Map display and header.
     sched_app[1:8,  8:12] = pn.Column(pn.Spacer(height=10),
                                       pn.Row(scheduler.map_title,styles={'background':'#048b8c'}),
-                                      pn.pane.PNG(map_image, height=500, align='center'))
+                                      pn.pane.PNG(map_image, sizing_mode='scale_both', align='center'))
     # Map display parameters (map, nside, color palette)
     sched_app[8:11, 8:12] = pn.Row(pn.pane.PNG(key_image, height=200),
                                    pn.Column(pn.Param(scheduler,

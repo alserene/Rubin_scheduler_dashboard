@@ -63,7 +63,7 @@ Current issues
     
     Layout options:
         - Row/column: all rows/columns are equally divided.
-        - GridSpec:   custom spacing but tables/map overrun their space.
+        - GridSpec:   custom spacing but tables overrun their space.
 
 
 Pending questions
