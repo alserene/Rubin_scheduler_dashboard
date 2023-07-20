@@ -4,6 +4,8 @@ This is an in-progress prototype for the Rubin Observatory's scheduler dashboard
 
 Currently, the survey, basis function and map data loads and is able to be selected from the tables; however, the display of a HorizonMap of a selected basis function/map has not yet been implemented. Until this is made functional, a static map is displayed in place of the HorizonMap.
 
+There are two current dashboards with different layouts: *RowColumnLayout.py and *GridSpecLayout.py. The row/column layout has rows/columns evenly divided, whereas the GridSpec layout has custom sizing applied to all components. The two dashboards also showcase two different debuggers: a terminal and a custom debugger pane.
+
 # Requirements.
 
 * Host a copy of [schedview](https://github.com/lsst/schedview/tree/main) in a virtual environment on your local machine (following the instructions given in the schedview README.md).
