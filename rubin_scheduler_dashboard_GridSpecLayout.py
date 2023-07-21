@@ -29,8 +29,8 @@ Still to implement
     2. Link basis_function selection and map selection to plot display.
     3. Link nside drop down selection to map nside.
     4. Link color palette drop down selection to map color palette.
-    5. Change heading fonts to match RUBIN logo font.
-    6. Check if able to load pickle from a URL.
+    5. Check if able to load pickle from a URL.
+    6. Make a key from bokeh.
 
 
 Current issues
@@ -39,27 +39,16 @@ Current issues
     Map display:
         - I have created a map following prenight.py but it loads blank.
         - This could be due to not having the PREOPS3512 branch of schedview.
-        
-    Hyperlinks:
-        - Survey rewards table includes hyperlinks for surveys without links.
     
     Logo:
         - Row/column layout: there is an unexplainable gap on the right
                              side of the Rubin logo.
         - GridSpec layout:   logo aligned correctly.
-         
-    Fonts:
-        - I haven't found a way to change the title/headings fonts.
-        - The styles 'font-family': 'Helvetica' option doesn't do anything.
     
     Debugger/error log options:
         a) Debugger: unsightly and the messages (all levels) are useless.
         b) Terminal: slightly less unsightly and useful errors
         c) Custom debugger: pretty, customisable, but text won't stay in box.
-    
-    clear_caches()
-        - The clear_caches function copied from prenight.py doesn't work.
-        - sched_app has no attribute stop().
     
     Layout options:
         - Row/column: all rows/columns are equally divided.
@@ -69,15 +58,7 @@ Current issues
 Pending questions
 -----------------
     
-    - What schedview function plots basis function maps?
     - Are users choosing a date or a datetime?
-    - Is the key static (can be an image) or variable?
-    - Will all surveys/basis functions have a URL link?
-    - Is a 'reward' map always available?
-        - If not, when not? When survey reward is infeasible?
-        - In sched_maps, some surveys (e.g. tier 3, surveys 1,2) don't have a
-          reward map, but in my pickle file, all surveys have reward maps.
-    - What resolution colour schemes? 256?
 
 """
 
@@ -113,7 +94,8 @@ terminal = pn.widgets.Terminal(height=100, sizing_mode='stretch_width')
 
 class Scheduler(param.Parameterized):
     
-    scheduler_fname = param.String(default="filepath or URL of pickle",
+    scheduler_fname = param.String(default=DEFAULT_SCHEDULER_FNAME,
+                                   # placeholder="filepath or URL of pickle",
                                    label="Scheduler pickle file")
     date            = param.Date(DEFAULT_CURRENT_TIME.datetime.date())
     tier            = param.ObjectSelector(default="", objects=[""])
@@ -564,18 +546,6 @@ def scheduler_app(date=None, scheduler_pickle=None):
                                              terminal,
                                              styles={'background':'#EDEDED'}),
                                    pn.Spacer(width=10))
-    
-    
-    # Copied from Eric's Prenight.py, but it throws an error.
-    # I'm not sure what should be written instead.
-    def clear_caches(session_context):
-        logging.info("Session cleared.")
-        sched_app.stop()                                                       # No attribute stop()
-    
-    try:
-        pn.state.on_session_destroyed(clear_caches)
-    except RuntimeError as e:
-        logging.info("RuntimeError: %s", e)
 
     return sched_app
 
