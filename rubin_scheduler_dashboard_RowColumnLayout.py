@@ -94,8 +94,7 @@ terminal = pn.widgets.Terminal(height=100, sizing_mode='stretch_width')
 
 class Scheduler(param.Parameterized):
     
-    scheduler_fname = param.String(default=DEFAULT_SCHEDULER_FNAME,
-                                   # placeholder="filepath or URL of pickle",
+    scheduler_fname = param.String(default="",
                                    label="Scheduler pickle file")
     date            = param.Date(DEFAULT_CURRENT_TIME.datetime.date())
     tier            = param.ObjectSelector(default="", objects=[""])
@@ -473,7 +472,6 @@ def scheduler_app(date=None, scheduler_pickle=None):
     if scheduler_pickle is not None:
         scheduler.scheduler_fname = scheduler_pickle
     
-    
     # Dashboard layout.
     sched_app = pn.Column(
         # Title pane across top of dashboard.
@@ -493,8 +491,9 @@ def scheduler_app(date=None, scheduler_pickle=None):
                     pn.Column(
                         pn.Param(scheduler,
                                   parameters=["scheduler_fname","date","tier"],
-                                  #widgets={"date": pn.widgets.DatePicker},
-                                  widgets={"date": pn.widgets.DatetimePicker},
+                                  widgets={'scheduler_fname':{'widget_type':pn.widgets.TextInput,
+                                                              'placeholder':'filepath or URL of pickle'},
+                                           'date':pn.widgets.DatetimePicker},
                                   name="Select pickle file, date and tier."),
                         ),
                     pn.Column(
