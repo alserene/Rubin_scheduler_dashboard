@@ -1,6 +1,7 @@
 import param
 import pandas as pd
 import panel as pn
+import numpy as np   # used once; not really neccessary
 import bokeh
 import logging
 import os
@@ -14,6 +15,7 @@ import schedview.compute.survey
 import schedview.collect.scheduler_pickle
 import schedview.plot.survey
 
+
 """
 Notes
 -----
@@ -25,40 +27,72 @@ Notes
 Still to implement
 ------------------
     
-    1. Survey/basis function holoviz map.
-    2. Link basis_function selection and map selection to plot display.
-    3. Link nside drop down selection to map nside.
-    4. Link color palette drop down selection to map color palette.
-    5. Check if able to load pickle from a URL.
-    6. Make a key from bokeh.
+    1. Display scalar maps of basis functions with scalar value.
+    2. Link color palette drop down selection to map color palette.
+    3. Check if able to load pickle from a URL.
+    4. Make a key from bokeh.
+    5. Implement Eman's changes (font, survey links).
+    6. Change logo path to static path or retrieve from Rubin URL.
 
 
-Current issues
---------------
-    
+Current issues/quirks:
+---------------------
+
     Map display:
-        - I have created a map following prenight.py but it loads blank.
-        - This could be due to not having the PREOPS3512 branch of schedview.
+
+        a) Sometimes a map gets "stuck" loading:
+            (Occurs when the current selection of survey_map != 'reward' and
+             a new survey is chosen, and when a new tier + survey is chosen.)
+        b) Survey maps with non-numeric rewards do not display a map, although
+           'reward' is shown as an option in survey_map selection.
+           RuntimeWarning: All-NaN slice encountered; np.nanmax(hpix_data[map_key])
+        c) When changing nside, and occassionally when selecting a survey or
+           basis function, a deserialisation error is thrown with no noticable
+           consequences:
+               ERROR:bokeh.server.protocol_handler:error handling message
+               error: DeserializationError("can't resolve reference 'p6667'")
     
+    Survey_map selection:
+        
+        - When a (non-scalar) basis function is selected from the table, perhaps
+          the survey_map drop-down selector should change to reflect this?
+        - If it does change, what happens then when a scalar basis function is
+          selected? What should be shown at the survey_map drop-down?
+
     Logo:
-        - Row/column layout: there is an unexplainable gap on the right
-                             side of the Rubin logo.
+        
         - GridSpec layout:   logo aligned correctly.
+        - Row/column layout: there is an unexplainable gap on the right side
+                             of the Rubin logo.
     
     Debugger/error log options:
+        
         a) Debugger: unsightly and the messages (all levels) are useless.
         b) Terminal: slightly less unsightly and useful errors
         c) Custom debugger: pretty, customisable, but text won't stay in box.
     
-    Layout options:
+    Layout:
+        
         - Row/column: all rows/columns are equally divided.
-        - GridSpec:   custom spacing but tables overrun their space.
+        - GridSpec:   custom spacing but tables/map overrun their spaces.
+    
+    Updates:
+        
+        a) When an unloadable pickle is loaded after a loadable pickle, user
+           gets a message that pickle can't be loaded, but all data of loadable
+           pickle stays accessible.
+               - Is this behaviour okay?
+        b) When an invalid date is chosen after a valid date, survey title,
+           survey table, and basis function table disappear, but basis function
+           table title, map title and map stay on screen.
+               - Should all data, no data or some data remain on screen?
 
 
 Pending questions
 -----------------
     
     - Are users choosing a date or a datetime?
+    - Do we have a pickle at a URL we can test with?
 
 """
 
@@ -70,7 +104,6 @@ color_palettes = [s for s in bokeh.palettes.__palettes__ if "256" in s]
 
 LOGO      = "/Users/me/Documents/2023/ADACS/Panel_scheduler/Rubin_scheduler_dashboard/lsst_white_logo.png"
 key_image = "/Users/me/Documents/2023/ADACS/Panel_scheduler/Rubin_scheduler_dashboard/key_image.png"
-map_image = "/Users/me/Documents/2023/ADACS/Panel_scheduler/Rubin_scheduler_dashboard/map_image.png" # Temporary, until map can be displayed.
 
 pn.extension("tabulator",
              css_files   = [pn.io.resources.CSS_URLS["font-awesome"]],
@@ -102,8 +135,8 @@ class Scheduler(param.Parameterized):
     basis_function  = param.Integer(default=-1)
     survey_map      = param.ObjectSelector(default="", objects=[""])
     plot_display    = param.Integer(default=1)
-    nside           = param.ObjectSelector(default="16",
-                                           objects=["8","16","32"],
+    nside           = param.ObjectSelector(default=16,
+                                           objects=[2**n for n in np.arange(1, 6)],
                                            label="Map resolution (nside)")
     color_palette   = param.ObjectSelector(default="Magma256",
                                            objects=color_palettes)
@@ -328,10 +361,9 @@ class Scheduler(param.Parameterized):
             self.survey_map = ""
             return
         logging.info("Updating map selector.")
-        self._survey_maps = schedview.compute.survey.compute_maps(self._listed_survey, # Move this into own update function.
+        self._survey_maps = schedview.compute.survey.compute_maps(self._listed_survey,
                                                                   self._conditions,
-                                                                  nside=8)    # Change once nside selector is made.
-                                                                  #nside=nside)
+                                                                  self.nside)
         maps = list(self._survey_maps.keys())
         self.param["survey_map"].objects = maps
         if 'reward' in maps:                                                   # If 'reward' map always exists, then this isn't needed.
@@ -339,7 +371,19 @@ class Scheduler(param.Parameterized):
         else:
             self.survey_map = maps[0]
         self.plot_display = 1
-
+        
+    
+    # Update map selections when nside changed.                                # Add try-catch here?
+    @param.depends("nside", watch=True)
+    def _update_nside_of_maps(self):
+        if self.tier == "" or self.survey < 0:
+            self.param["survey_map"].objects = [""]
+            self.survey_map = ""
+            return
+        logging.info("Updating map resolution (nside).")
+        self._survey_maps = schedview.compute.survey.compute_maps(self._listed_survey,
+                                                                  self._conditions,
+                                                                  self.nside)
 
     # Update the parameter which determines whether a basis function or a map is plotted.
     @param.depends("survey_map", watch=True)
@@ -414,6 +458,7 @@ class Scheduler(param.Parameterized):
         try:
             self.plot_display = 2                                              # Display basis function instead of a map.
             self.basis_function = self._basis_function_df_widget.selection[0]
+            logging.info(f"Basis function selection: {self._basis_functions['basis_function'][self.basis_function]}")
         except Exception as e:
             logging.error(e)
             self._debugging_message = "Basis function dataframe selection unable to be updated: " + str(e)
@@ -421,30 +466,48 @@ class Scheduler(param.Parameterized):
             self.basis_function = -1                                           # When no basis function selected, basis_function = -1.
 
 
-    # Create sky_map of survey for display (DISPLAYING WHITE SPACE!)
-    @param.depends("_conditions","_survey_maps")
+    # Create sky_map of survey for display.
+    @param.depends("_conditions","_survey_maps","plot_display","survey_map","basis_function","nside")
     def sky_map(self):
         if self._conditions is None:
             return "No scheduler loaded."
         if self._survey_maps is None:
             return "No surveys are loaded."
         try:
-            sky_map = schedview.plot.survey.map_survey_healpix(60158.125,#self._conditions.mjd,
-                                                               self._survey_maps,
-                                                               "reward",
-                                                               8)
-                                                               #self.survey_map,
-                                                               #self.nside)
+            # Load survey map.
+            if self.plot_display==1: #self.basis_function == -1:
+                sky_map = schedview.plot.survey.map_survey_healpix(self._conditions.mjd,
+                                                                   self._survey_maps,
+                                                                   self.survey_map,
+                                                                   self.nside)
+            # Load a basis function map.
+            elif self.basis_function!=-1 and self.plot_display==2:
+                bf = self._basis_functions['basis_function'][self.basis_function]
+                # Is the basis function in the list of survey maps?
+                if any(bf in key for key in self._survey_maps.keys()):
+                    # Get key name
+                    bf_key = list(key for key in self._survey_maps.keys() if bf in key)[0]
+                    # Generate map
+                    sky_map = schedview.plot.survey.map_survey_healpix(self._conditions.mjd,
+                                                                       self._survey_maps,
+                                                                       bf_key,
+                                                                       self.nside)
+                # If the basis function is not in the list of survey maps, it is scalar.
+                else:
+                    logging.info("Could not load map of scalar basis function.")
+                    self._debugging_message = "Could not load map of scalar basis function."
+                    terminal.write(f"\n {Time.now().iso} - Could not load map of scalar basis function.")
+                    return "Basis function is a scalar; scalar maps not yet implemented."
+                
+            sky_map_figure = sky_map.figure
             logging.info("Map successfully created.")
         except Exception as e:
-            logging.info("Could not load map ...")
+            logging.info("Could not load map:")
             logging.error(e)
-            logging.info("... due to above reason.")
             self._debugging_message = "Could not load map: " + str(e)
             terminal.write(f"\n {Time.now().iso} - Could not load map: {e}")
             return "No map loaded."
-        
-        return sky_map
+        return sky_map_figure
     
 
     # Panel for debugging messages
@@ -533,7 +596,7 @@ def scheduler_app(date=None, scheduler_pickle=None):
     # Map display and header.
     sched_app[1:8,  8:12] = pn.Column(pn.Spacer(height=10),
                                       pn.Row(scheduler.map_title,styles={'background':'#048b8c'}),
-                                      pn.pane.PNG(map_image, sizing_mode='scale_both', align='center'))
+                                      pn.param.ParamMethod(scheduler.sky_map, loading_indicator=True))
     # Map display parameters (map, nside, color palette)
     sched_app[8:11, 8:12] = pn.Row(pn.pane.PNG(key_image, height=200),
                                    pn.Column(pn.Param(scheduler,
